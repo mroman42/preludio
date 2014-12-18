@@ -1,0 +1,346 @@
+;FUNCIONES DE CONFIGURACIÓN
+para iniciamidi
+escribe (abremidi 1)
+fin
+
+;FUNCIONES DE CREACIÓN DE NOTAS
+para nnota :nota :octava
+;Devuelve el número asignado por el MIDI a la nota :nota (escrita en notación americana) de la octava :octava. Si no la encuentra lo deja igual. 
+;Ejemplo nnota "C 3 -> Devuelve 60
+sisino :nota="C [haz "numnota 0][
+sisino :nota="Cs [haz "numnota 1][
+sisino :nota="Db [haz "numnota 1][
+sisino :nota="D [haz "numnota 2][
+sisino :nota="Ds [haz "numnota 3][
+sisino :nota="Eb [haz "numnota 3][
+sisino :nota="E [haz "numnota 4][
+sisino :nota="Fb [haz "numnota 4][
+sisino :nota="Es [haz "numnota 5][
+sisino :nota="F [haz "numnota 5][
+sisino :nota="Fs [haz "numnota 6][
+sisino :nota="Gb [haz "numnota 6][
+sisino :nota="G [haz "numnota 7][
+sisino :nota="Gs [haz "numnota 8][
+sisino :nota="Ab [haz "numnota 8][
+sisino :nota="A [haz "numnota 9][
+sisino :nota="As [haz "numnota 10][
+sisino :nota="H [haz "numnota 10][
+sisino :nota="Bb [haz "numnota 10][
+sisino :nota="B [haz "numnota 11][
+sisino :nota="Bs [haz "numnota 0][
+sisino :nota="Cb [haz "numnota 11][haz "numnota :nota
+]]]]]]]]]]]]]]]]]]]]]]
+haz "salida (:octava+2)*12+:numnota
+devuelve :salida
+fin
+
+para notaon :nota :octava :volumen :canal
+;Hace sonar la nota :nota de la octava :octava con el volumen :volumen (100 es un volumen medio) por el canal :canal (se usa el 0 habitualmente)
+haz "numero (nnota :nota :octava)
+mensajemidi (lista 144+:canal :numero :volumen)
+fin
+
+para notaoff :nota :octava :volumen :canal
+;Apaga la nota :nota de la octava :octava con el volumen :volumen (100 es un volumen medio) por el canal :canal (se usa el 0 habitualmente)
+haz "numero (nnota :nota :octava)
+mensajemidi (lista 128+:canal :numero :volumen)
+fin
+
+para acordeon :nota :modo :octava :volumen :canal
+;Toca el acorde fundamental de la nota :nota
+;El modo será 0-Mayor  1-Menor  2-7Dominante 3-Disminuido 5-7Disminuida  
+haz "numeronota (nnota :nota :octava)
+sisino :modo=0 [haz "tercera 4 haz "quinta 7 haz "septima 0][
+sisino :modo=1 [haz "tercera 3 haz "quinta 7 haz "septima 0][
+sisino :modo=2 [haz "tercera 4 haz "quinta 7 haz "septima 10][
+sisino :modo=3 [haz "tercera 3 haz "quinta 6 haz "septima 0][
+sisino :modo=5 [haz "tercera 3 haz "quinta 3 haz "septima 9][
+]]]]]
+mensajemidi (lista 144+:canal :numeronota :volumen
+144+:canal :numeronota+:tercera :volumen 
+144+:canal :numeronota+:quinta :volumen 
+144+:canal :numeronota+:septima :volumen)
+fin
+
+para acordeoff :nota :modo :octava :volumen :canal
+;Apaga ese mismo acorde
+haz "numeronota (nnota :nota :octava)
+sisino :modo=0 [haz "tercera 4 haz "quinta 7 haz "septima 0][
+sisino :modo=1 [haz "tercera 3 haz "quinta 7 haz "septima 0][
+sisino :modo=2 [haz "tercera 4 haz "quinta 7 haz "septima 10][
+sisino :modo=3 [haz "tercera 3 haz "quinta 6 haz "septima 0][
+sisino :modo=5 [haz "tercera 3 haz "quinta 3 haz "septima 9][
+]]]]]
+mensajemidi (lista 128+:canal :numeronota :volumen
+128+:canal :numeronota+:tercera :volumen 
+128+:canal :numeronota+:quinta :volumen 
+128+:canal :numeronota+:septima :volumen)
+fin
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;COMPONER
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+para componerazar
+componer -1 -1 -1 -1 -1
+fin
+
+;PRINCIPAL
+para componer :or_compases :or_modoobra :or_tonalidad :or_esperas :or_beats
+constantes :or_compases :or_modoobra :or_tonalidad :or_esperas :or_beats ; Declara las variables principales
+comp_acordes ; Compone los acordes escribiendo por ejemplo I V VI I
+comp_modoacordes ; Calcula qué modo tendrán los acordes Mayor, menor, etc.
+fundamentales ; Calcula cuál es la nota base de los acordes escribiendo por ejemplo Mi Fa La Si Mi
+comp_melodia ; Compone una melodía al azar
+tocar ; Toca lo que ha compuesto
+fin
+
+
+para constantes :or_compases :or_modoobra :or_tonalidad :or_esperas :or_beats
+;Si le hemos ordenado que haga un número de algo como tonalidad, modo o compases determinado lo hace, si hemos escrito -1 lo hace al azar
+sisino :or_compases=-1 [haz "numeroacordes 8][haz "numeroacordes :or_compases]
+sisino :or_modoobra=-1 [haz "modoobra azar 2][haz "modoobra :or_modoobra]
+sisino :or_tonalidad=-1 [haz "tonalidadobra azar 12][haz "tonalidadobra :or_tonalidad]
+sisino :or_beats=-1 [haz "beats (azar 2)+3][haz "beats :or_beats]
+sisino :or_esperas=-1 [haz "esperas (azar 30)+10][haz "esperas :or_esperas]
+;Limpieza: limpia variables que se usarán luego
+haz "c 0
+haz "b 0
+haz "i 0
+fin
+
+;CREACIÓN DE ACORDES
+para comp_acordes
+haz "mt_acordes (matriz :numeroacordes 0); 		Matriz unidimensional de acordes/compás
+
+ponelemento 0 :mt_acordes 1;			Define el primer y último acordes como 1º y el penúltimo como 5º
+ponelemento :numeroacordes-1 :mt_acordes 1
+ponelemento :numeroacordes-2 :mt_acordes 5
+
+haz "i 1;						Genera acordes siguiendo sigueacorde
+mientras [:i<:numeroacordes-2][
+ponelemento :i :mt_acordes (sigueacorde (elemento :i-1 :mt_acordes))
+haz "i :i+1
+]
+fin
+
+para sigueacorde :acorde;				Devuelve un acorde aleatorio que sigue al acorde dado 
+haz "al azar 10;					según reglas probabilísticas de armonía tonal
+sisino (:acorde=1) [sisino :al<3 [devuelve 5][sisino :al<6 [devuelve 4][sisino :al<9 [devuelve 2][devuelve 6]]]][
+sisino (:acorde=2) [sisino :al<8 [devuelve 5][sisino :al=8 [devuelve 6][devuelve 4]]][
+sisino (:acorde=3) [devuelve 6][
+sisino (:acorde=4) [sisino :al<4 [devuelve 5][sisino :al<7 [devuelve 1][devuelve 2]]][
+sisino (:acorde=5) [sisino :al<6 [devuelve 1][sisino :al<9 [devuelve 6][devuelve 3]]][
+sisino (:acorde=6) [sisino :al<5 [devuelve 2][sisino :al<8 [devuelve 5][devuelve 4]]][
+]]]]]]
+fin
+
+;MODALIZAR ACORDES
+;Nota: Faltan Dominantes Secundarias
+para modoacorde :modo :acorde
+;El modo será 0-Mayor  1-Menor  2-7Dominante 3-Disminuido 5-7Disminuida  
+si (:acorde=1) [sisino :modo=0 [devuelve 0][devuelve 1]]
+si (:acorde=2) [sisino :modo=0 [devuelve 1][devuelve 3]]
+si (:acorde=3) [sisino :modo=0 [devuelve 1][devuelve 0]]
+si (:acorde=4) [sisino :modo=0 [devuelve 0][devuelve 1]]
+si (:acorde=5) [devuelve 2]
+si (:acorde=6) [sisino :modo=0 [devuelve 1][devuelve 0]]
+si (:acorde=7) [devuelve 3]
+fin
+
+para comp_modoacordes
+haz "mt_modoacordes (matriz :numeroacordes 0)
+
+haz "i 0
+mientras [:i<:numeroacordes][
+ponelemento :i :mt_modoacordes (modoacorde :modoobra (elemento :i  :mt_acordes))
+haz "i :i+1
+]
+fin
+
+;ESCRIBIR FUNDAMENTALES COMO NÚMEROS
+para fundamentales
+haz "mt_fundamentales (matriz :numeroacordes 0)
+
+haz "i 0
+mientras [:i<:numeroacordes][
+ponelemento :i :mt_fundamentales (fundamental :modoobra (elemento :i  :mt_acordes))
+haz "i :i+1
+]
+fin
+
+para fundamental :modo :acorde
+si (:acorde=1) [devuelve 0]
+si (:acorde=2) [devuelve 2]
+si (:acorde=3) [sisino :modo=0 [devuelve 4][devuelve 3]]
+si (:acorde=4) [devuelve 5]
+si (:acorde=5) [devuelve 7]
+si (:acorde=6) [sisino :modo=0 [devuelve 9][devuelve 8]]
+si (:acorde=7) [devuelve 11]
+fin
+
+;ESCRIBIR MELODÍA
+para comp_melodia
+haz "mt_melodia (matriz :numeroacordes*:beats 0)
+
+haz "i 0;Limpia matriz
+mientras [:i<((:numeroacordes)*:beats)][
+ponelemento :i :mt_melodia -200
+haz "i :i+1
+]
+
+haz "i 0;Escribe
+mientras [:i<((:numeroacordes)*:beats)][
+haz "n azar 3
+si (:n=0) [ponelemento :i :mt_melodia ((elemento (entero (:i/:beats)) :mt_fundamentales)+72)]
+si (:n=1) [ponelemento :i :mt_melodia ((elemento (entero (:i/:beats)) :mt_fundamentales)+72+4-(modulo (elemento entero(:i/:beats) :mt_modoacordes) 2))]
+si (:n=2) [ponelemento :i :mt_melodia ((elemento (entero (:i/:beats)) :mt_fundamentales)+72+7-entero((elemento entero(:i/:beats) :mt_modoacordes)/3))]
+haz "i :i+1
+]
+
+;Finaliza a tónica
+ponelemento (:numeroacordes)*:beats-1 :mt_melodia 72
+ponelemento (:numeroacordes)*:beats-2 :mt_melodia 72
+fin
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;TOCAR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+para tocar
+haz "c 0
+haz "b 0
+mientras [:c<:numeroacordes][
+bajo :c :b
+armonia :c :b
+arpegio :c :b
+;ritmo :c :b
+melodia :c :b
+haz "b :b+1
+si :b=:beats [haz "b 0 haz "c :c+1]
+espera :esperas
+]
+;Chapuza para cerrar la melodía
+mensajemidi (LISTA 128+4 (elemento :c*:beats+:b-1 :mt_melodia)+:tonalidadobra 100)
+fin
+
+para bajo :c :b
+si :b=0[
+sisino :c=0 [][mensajemidi (LISTA 128+0 36+(elemento :c-1 :mt_fundamentales)+(:tonalidadobra) 50)]
+mensajemidi (LISTA 192+0 32 255 144+0 36+(elemento :c :mt_fundamentales)+(:tonalidadobra) 50)
+]
+fin
+
+para armonia :c :b
+si :b=0[
+sisino :c=0 [][acordeoff ((elemento :c-1 :mt_fundamentales)+:tonalidadobra) (elemento :c-1 :mt_modoacordes) 2 50 1]
+mensajemidi (LISTA 192+1 1 255) acordeon ((elemento :c :mt_fundamentales)+:tonalidadobra) (elemento :c :mt_modoacordes) 2 50 1
+]
+fin
+
+para arpegio :c :b
+mensajemidi (LISTA 192+2 24 255)
+;sisino :c=0 [][sisino :b=0 [][]];quitar nota (no hace falta!?)
+si :b=0 [mensajemidi (LISTA 144+2 (elemento :c :mt_fundamentales)+:tonalidadobra+60 50)]
+si :b=1 [mensajemidi (LISTA 144+2 (elemento :c :mt_fundamentales)+:tonalidadobra+60+4-(modulo (elemento :c :mt_modoacordes) 2) 50)]
+si :b=2 [mensajemidi (LISTA 144+2 (elemento :c :mt_fundamentales)+:tonalidadobra+60+7-entero((elemento :c :mt_modoacordes)/3) 50)]
+si :b=3 [mensajemidi (LISTA 144+2 (elemento :c :mt_fundamentales)+:tonalidadobra+60+4-(modulo (elemento :c :mt_modoacordes) 2) 50)]
+fin
+
+para ritmo :c :b
+sisino (:beats=4) [
+si :b=0 [mensajemidi (LISTA 144+9 38 50)]
+si :b=1 [mensajemidi (LISTA 144+9 44 50)]
+si :b=2 [mensajemidi (LISTA 144+9 35 50)]
+si :b=3 [mensajemidi (LISTA 144+9 44 50)]
+][
+si :b=0 [mensajemidi (LISTA 144+9 38 50)]
+si :b=1 [mensajemidi (LISTA 144+9 44 50)]
+si :b=2 [mensajemidi (LISTA 144+9 44 50)]
+]
+fin
+
+para melodia :c :b
+mensajemidi (LISTA 192+4 0 255)
+
+sisino  (:c*:beats+:b)=0 [mensajemidi (LISTA 144+4 (elemento :c*:beats+:b :mt_melodia)+:tonalidadobra 100)][
+sisino (elemento :c*:beats+:b-1 :mt_melodia)=(elemento :c*:beats+:b :mt_melodia) [][
+mensajemidi (LISTA 128+4 (elemento :c*:beats+:b-1 :mt_melodia)+:tonalidadobra 100)
+mensajemidi (LISTA 144+4 (elemento :c*:beats+:b :mt_melodia)+:tonalidadobra 100)
+]]
+
+fin
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;ESTRUCTURAR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+para pieza
+componer 4 -1 -1 -1 -1
+tocar
+guardar
+componer 8 (:modoobra-1)/(-1) (((:modoobra*(-2))+1)*(-3))+:tonalidadobra :esperas :beats
+abrir
+tocar
+componer 4 :modoobra :tonalidadobra :esperas :beats
+fin
+
+para guardar
+;Datos
+haz "Gnumeroacordes :numeroacordes
+haz "Gbeats :beats
+haz "Gesperas :esperas
+haz "Gtonalidadobra :tonalidadobra
+haz "Gmodoobra :modoobra
+
+;Notas y Acordes
+haz "Gmt_melodia :mt_melodia
+haz "Gmt_fundamentales :mt_fundamentales
+haz "Gmt_modoacordes :mt_modoacordes
+fin
+
+para abrir 
+;Datos
+haz "numeroacordes :Gnumeroacordes
+haz "beats :Gbeats
+haz "esperas :Gesperas
+haz "tonalidadobra :Gtonalidadobra
+haz "modoobra :Gmodoobra
+
+;Notas y Acordes
+haz "mt_melodia :Gmt_melodia
+haz "mt_fundamentales :Gmt_fundamentales
+haz "mt_modoacordes :Gmt_modoacordes
+fin
+
+para componerguardada :compases :guardaarchivo
+componer :compases  -1 -1 -1 -1
+guardar
+abreescritura  :guardaarchivo
+ponescritura  :guardaarchivo
+escribe :beats
+escribe :numeroacordes
+escribe :esperas
+escribe :tonalidadobra
+escribe :modoobra
+escribe matrizalista (:mt_melodia)
+escribe matrizalista (:mt_fundamentales)
+escribe matrizalista (:mt_modoacordes)
+ponescritura []
+cierra :guardaarchivo
+fin
+
+para abrirguardada :guardaarchivo
+abrelectura :guardaarchivo
+ponlectura  :guardaarchivo
+haz "beats (leepalabra)
+haz "numeroacordes entero(leepalabra)
+haz "esperas (leepalabra)
+haz "tonalidadobra (leepalabra)
+haz "modoobra (leepalabra)
+haz "mt_melodia (listaamatriz (leelista) 0)
+haz "mt_fundamentales (listaamatriz (leelista) 0)
+haz "mt_modoacordes (listaamatriz (leelista) 0)
+cierra :guardaarchivo
+tocar
+fin
