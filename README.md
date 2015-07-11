@@ -8,3 +8,8 @@ Escrito en LOGO en castellano, el primer lenguaje de programación que aprendimo
 
 ## Uso del programa
 El programa está probado sobre *MSWLogo*, que puede instalarse en Windows y emularse bajo Wine en GNU/Linux. La salida midi puede dar problemas en algunos casos, y en GNU/Linux necesitará tener instalado `timidity`.
+
+## Ejemplo
+El archivo `preludio.wav` muestra un ejemplo de composición creada por el
+programa. El archivo de audio final se obtuvo de sintentizar el archivo midi
+con una librería de audio, añadiendo las dinámicas y la última nota manualmente.
